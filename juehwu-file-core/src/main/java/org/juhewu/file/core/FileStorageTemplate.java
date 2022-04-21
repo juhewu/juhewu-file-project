@@ -3,6 +3,8 @@ package org.juhewu.file.core;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Predicate;
@@ -18,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import cn.hutool.core.io.file.FileNameUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.URLUtil;
 import lombok.AllArgsConstructor;
 import lombok.Setter;
 
@@ -83,48 +86,49 @@ public class FileStorageTemplate {
      * 根据条件
      */
     public boolean delete(FileInfo fileInfo) {
-        return delete(fileInfo,null);
+        return delete(fileInfo, null);
     }
 
     /**
      * 根据条件删除文件
      */
     public boolean delete(FileInfo fileInfo, Predicate<FileInfo> predicate) {
-        if (fileInfo == null) return true;
-        if (predicate != null && !predicate.test(fileInfo)) return false;
+        if (fileInfo == null)
+            return true;
+        if (predicate != null && !predicate.test(fileInfo))
+            return false;
         FileStorage fileStorage = getFileStorage(fileInfo.getStorageId());
-        if (fileStorage == null) throw new FileStorageException("没有找到对应的存储平台！");
+        if (fileStorage == null)
+            throw new FileStorageException("没有找到对应的存储平台！");
 
-        return new DeleteAspectChain(aspectList,(_fileInfo,_fileStorage) -> {
+        return new DeleteAspectChain(aspectList, (_fileInfo, _fileStorage) -> {
             return _fileStorage.delete(_fileInfo);   //删除文件
-        }).next(fileInfo,fileStorage);
+        }).next(fileInfo, fileStorage);
     }
-
 
     /**
      * 文件是否存在
      */
     public boolean exists(FileInfo fileInfo) {
-        if (fileInfo == null) return false;
-        return new ExistsAspectChain(aspectList,(_fileInfo,_fileStorage) ->
+        if (fileInfo == null)
+            return false;
+        return new ExistsAspectChain(aspectList, (_fileInfo, _fileStorage) ->
                 _fileStorage.exists(_fileInfo)
-        ).next(fileInfo,getFileStorage(fileInfo.getStorageId()));
+        ).next(fileInfo, getFileStorage(fileInfo.getStorageId()));
     }
-
 
     /**
      * 获取文件下载器
      */
     public Downloader download(FileInfo fileInfo) {
-        return new Downloader(fileInfo,aspectList,getFileStorage(fileInfo.getStorageId()),Downloader.TARGET_FILE);
+        return new Downloader(fileInfo, aspectList, getFileStorage(fileInfo.getStorageId()), Downloader.TARGET_FILE);
     }
-
 
     /**
      * 获取缩略图文件下载器
      */
     public Downloader downloadTh(FileInfo fileInfo) {
-        return new Downloader(fileInfo,aspectList,getFileStorage(fileInfo.getStorageId()),Downloader.TARGET_TH_FILE);
+        return new Downloader(fileInfo, aspectList, getFileStorage(fileInfo.getStorageId()), Downloader.TARGET_TH_FILE);
     }
 
     private FileStorage getFileStorage(String id) {
@@ -181,6 +185,41 @@ public class FileStorageTemplate {
             return pre;
         } catch (Exception e) {
             throw new FileStorageException("根据 File 创建上传预处理器失败！", e);
+        }
+    }
+
+    /**
+     * 根据 URL 创建上传预处理器，originalFilename 为空字符串
+     */
+    public UploadPretreatment of(URL url) {
+        try {
+            UploadPretreatment pre = of();
+            pre.setFileWrapper(new MultipartFileWrapper(new MockMultipartFile("", url.openStream())));
+            return pre;
+        } catch (Exception e) {
+            throw new FileStorageException("根据 URL 创建上传预处理器失败！", e);
+        }
+    }
+
+    /**
+     * 根据 URI 创建上传预处理器，originalFilename 为空字符串
+     */
+    public UploadPretreatment of(URI uri) {
+        try {
+            return of(uri.toURL());
+        } catch (Exception e) {
+            throw new FileStorageException("根据 URI 创建上传预处理器失败！", e);
+        }
+    }
+
+    /**
+     * 根据 url 字符串创建上传预处理器，兼容Spring的ClassPath路径、文件路径、HTTP路径等，originalFilename 为空字符串
+     */
+    public UploadPretreatment of(String url) {
+        try {
+            return of(URLUtil.url(url));
+        } catch (Exception e) {
+            throw new FileStorageException("根据 url：" + url + " 创建上传预处理器失败！", e);
         }
     }
 }

@@ -8,10 +8,10 @@ import org.juhewu.file.core.FileStorageTemplate;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import cn.hutool.core.io.FileUtil;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -33,6 +33,18 @@ public class FileController {
     @PostMapping("{id}")
     public FileInfo update(@PathVariable String id, MultipartFile file) {
         return template.of(file).setStorageId(id).upload();
+    }
+
+    /**
+     * 根据文件地址将文件上传到默认存储
+     * curl -X POST 'localhost:8080/upload?url=https%3A%2F%2Fwww.baidu.com%2Fimg%2FPCfb_5bf082d29588c07f842ccde3f97243ea.png&originalFileName=baidu.png'
+     *
+     * @param url 文件地址
+     * @return 文件信息
+     */
+    @PostMapping("upload")
+    public FileInfo update(@RequestParam String url, @RequestParam String originalFileName) {
+        return template.of(url).setOriginalFilename(originalFileName).setStorageId(properties.getDefaultStorageId()).upload();
     }
 
     @PostMapping
