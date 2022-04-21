@@ -77,7 +77,7 @@ juhewu:
 配置文件需要配置`juhewu.file-storage.default-storage-id`。
 
 ```java
-    template.of(file).setStorageId(storageId).upload();
+    template.of(file).setStorageId(fileStorageProperties.getDefaultStorageId()).upload();
 ```
 
 2. 上传文件到指定的存储
@@ -86,7 +86,14 @@ juhewu:
     template.of(file).setStorageId(storageId).upload();
 ```
 
-3. 下载对象
+3. 根据 url 上传文件到指定的存储
+如：url: https%3A%2F%2Fwww.baidu.com%2Fimg%2FPCfb_5bf082d29588c07f842ccde3f97243ea.png  
+   originalFileName: baidu.png
+```java
+    template.of(url).setOriginalFilename(originalFileName).setStorageId(storageId).upload();
+```
+
+4. 下载对象
 
 ```java
     template.download(fileinfo).outputStream(response.getOutputStream());
