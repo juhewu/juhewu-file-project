@@ -24,6 +24,17 @@ public class FileController {
     private final FileStorageProperties properties;
 
     /**
+     * 上传文件到默认的存储
+     *
+     * @param file 文件
+     * @return 文件信息
+     */
+    @PostMapping
+    public FileInfo update(MultipartFile file) {
+        return template.of(file).setStorageId(properties.getDefaultStorageId()).upload();
+    }
+
+    /**
      * 上传文件到指定的存储
      *
      * @param id 存储 id
@@ -48,10 +59,10 @@ public class FileController {
         return template.of(url).setOriginalFilename(originalFileName).setStorageId(properties.getDefaultStorageId()).upload();
     }
 
-    @PostMapping
-    @SneakyThrows
-    public void down(MultipartFile file, ServletResponse response) {
-        FileInfo upload = template.of(file).setStorageId(properties.getDefaultStorageId()).upload();
-        template.download(upload).outputStream(response.getOutputStream());
-    }
+//    @PostMapping
+//    @SneakyThrows
+//    public void down(MultipartFile file, ServletResponse response) {
+//        FileInfo upload = template.of(file).setStorageId(properties.getDefaultStorageId()).upload();
+//        template.download(upload).outputStream(response.getOutputStream());
+//    }
 }

@@ -1,3 +1,8 @@
+spring:
+  servlet:
+    multipart:
+      # 上传文件最大大小，默认是1M
+      max-file-size: 100MB
 juhewu:
   file-storage:
     # 默认的存储
@@ -45,3 +50,4 @@ juhewu:
         storageClass: org.juhewu.file.core.storage.CustomerFileStorage
         params:
           accessKey: test
+
