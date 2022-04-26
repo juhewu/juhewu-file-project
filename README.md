@@ -86,7 +86,8 @@ juhewu:
     template.of(file).setStorageId(storageId).upload();
 ```
 
-3. 根据 url 上传文件到指定的存储
+3. 根据 url 上传文件到指定的存储  
+
 如：url: https%3A%2F%2Fwww.baidu.com%2Fimg%2FPCfb_5bf082d29588c07f842ccde3f97243ea.png  
    originalFileName: baidu.png
 ```java
