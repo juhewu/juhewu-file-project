@@ -48,7 +48,6 @@ public class FileController {
 
     /**
      * 根据文件地址将文件上传到默认存储
-     * curl -X POST 'localhost:8080/upload?url=https%3A%2F%2Fwww.baidu.com%2Fimg%2FPCfb_5bf082d29588c07f842ccde3f97243ea.png&originalFileName=baidu.png'
      *
      * @param url 文件地址
      * @param originalFileName 文件名

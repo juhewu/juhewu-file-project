@@ -26,6 +26,11 @@
             <artifactId>hutool-core</artifactId>
             <version>5.5.2</version>
         </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-crypto</artifactId>
+            <version>5.7.21</version>
+        </dependency>
         <!-- 图片处理 https://github.com/coobird/thumbnailator -->
         <dependency>
             <groupId>net.coobird</groupId>

@@ -2,6 +2,7 @@ package org.juhewu.file.core;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
@@ -21,11 +22,14 @@ import cn.hutool.core.io.file.FileNameUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
+import cn.hutool.crypto.digest.DigestUtil;
 import lombok.AllArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 @AllArgsConstructor
 @Setter
+@Slf4j
 public class FileStorageTemplate {
 
     private FileStorageTemplate self;
@@ -54,7 +58,11 @@ public class FileStorageTemplate {
         fileInfo.setObjectType(uploadPretreatment.getObjectType());
         fileInfo.setPath(uploadPretreatment.getPath());
         fileInfo.setStorageId(uploadPretreatment.getStorageId());
-        fileInfo.setMd5("");
+        try {
+            fileInfo.setMd5(DigestUtil.md5Hex(file.getInputStream()));
+        } catch (IOException e) {
+            log.error("获取文件 m5d 异常", e);
+        }
         if (StrUtil.isNotBlank(uploadPretreatment.getSaveFilename())) {
             fileInfo.setFilename(uploadPretreatment.getSaveFilename());
         } else {
