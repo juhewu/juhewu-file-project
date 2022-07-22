@@ -1,0 +1,11 @@
+server:
+  port: 8057
+
+
+
+minio:
+  url: 'http://127.0.0.1:9000'
+#  username: readonly
+#  password: readonly
+  username: admin
+  password: admin123
