@@ -16,6 +16,7 @@ import org.juhewu.file.core.FileStorageFactory;
 import org.juhewu.file.core.FileStorageTemplate;
 import org.juhewu.file.core.aspect.FileStorageAspect;
 import org.juhewu.file.core.storage.AwsS3FileStorage;
+import org.juhewu.file.core.storage.FastDFSFileStorage;
 import org.juhewu.file.core.storage.FileStorage;
 import org.juhewu.file.core.storage.LocalFileStorage;
 import org.springframework.context.ApplicationContext;
@@ -82,6 +83,19 @@ public class FileStorageAutoConfiguration implements WebMvcConfigurer {
         }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
+    /**
+     * 本地存储 Bean
+     */
+    @Bean
+    public List<FastDFSFileStorage> fastDFSFileStorages() {
+        return properties.getFastDFS().stream().map(item -> {
+            if (item.isEnable()) {
+                log.info("加载 fast dfs 存储平台：{}", item.getStorageId());
+                return new FastDFSFileStorage(item);
+            }
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
     /**
      * 自己扩展的 storage
      *

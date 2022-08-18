@@ -11,15 +11,17 @@
 
     <artifactId>juhewu-file-spring-boot-starter</artifactId>
 
-    <properties>
-        <revision>1.0.0</revision>
-    </properties>
-
     <dependencies>
         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <version>5.3.17</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.juhewu</groupId>
-            <artifactId>juehwu-file-core</artifactId>
-            <version>1.0.0</version>
+            <artifactId>juhewu-file-core</artifactId>
+            <version>${revision}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -31,10 +33,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
         </dependency>
 
     </dependencies>

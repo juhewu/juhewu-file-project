@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.juhewu.file.core.storage.AwsS3FileStorage;
+import org.juhewu.file.core.storage.FastDFSFileStorage;
 import org.juhewu.file.core.storage.config.CustomerBaseConfig;
 import org.juhewu.file.core.storage.LocalFileStorage;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -36,6 +37,10 @@ public class FileStorageProperties {
     private List<AwsS3FileStorage.AwsS3> awsS3 = new ArrayList<>();
 
     private List<CustomerBaseConfig> other = new ArrayList<>();
+    /**
+     * fast dfs
+     */
+    private List<FastDFSFileStorage.FastDFS> fastDFS = new ArrayList<>();
 
 
 }

@@ -11,10 +11,6 @@
 
     <artifactId>juhewu-file-spring-boot-simple</artifactId>
 
-    <properties>
-        <revision>1.0.0</revision>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -23,7 +19,7 @@
         <dependency>
             <groupId>org.juhewu</groupId>
             <artifactId>juhewu-file-spring-boot-starter</artifactId>
-            <version>1.0.0</version>
+            <version>${revision}</version>
         </dependency>
         <!-- AWS S3 -->
         <dependency>
