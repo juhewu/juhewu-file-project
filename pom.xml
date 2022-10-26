@@ -20,7 +20,7 @@
 
     <properties>
         <!--项目版本号-->
-        <revision>1.0.1-SNAPSHOTS</revision>
+        <revision>1.0.1</revision>
         <!--设置编码-->
         <encoding>utf-8</encoding>
         <!--jdk 版本号-->
