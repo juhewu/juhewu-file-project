@@ -105,50 +105,24 @@
         </license>
     </licenses>
 
+    <!-- 发布管理信息 -->
     <distributionManagement>
         <repository>
-            <id>ciic-releases</id>
-            <name>ciic-releases</name>
-            <url>http://47.92.110.236:8666/repository/ciic-releases/</url>
+            <!-- 这里的id必须要和全局配置中的release id 一致 -->
+            <id>sonatype_releases</id>
+            <name>Nexus Release Repository</name>
+            <!-- 这里就是在创建issue成功后，对方回复的release发布地址-->
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
         </repository>
         <snapshotRepository>
-            <id>ciic-snapshots</id>
-            <name>ciic-snapshots</name>
-            <url>http://47.92.110.236:8666/repository/ciic-snapshots/</url>
+            <!-- 这里的id必须要和全局配置中的snapshot id 一致 -->
+            <id>sonatype_snapshots</id>
+            <name>Nexus Snapshot Repository</name>
+            <!-- 这里就是在创建issue成功后，对方回复的snapshot发布地址-->
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
-    <!-- 发布管理信息 -->
-<!--    <distributionManagement>-->
-<!--        <repository>-->
-<!--            &lt;!&ndash; 这里的id必须要和全局配置中的release id 一致 &ndash;&gt;-->
-<!--            <id>sonatype_releases</id>-->
-<!--            <name>Nexus Release Repository</name>-->
-<!--            &lt;!&ndash; 这里就是在创建issue成功后，对方回复的release发布地址&ndash;&gt;-->
-<!--            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>-->
-<!--        </repository>-->
-<!--        <snapshotRepository>-->
-<!--            &lt;!&ndash; 这里的id必须要和全局配置中的snapshot id 一致 &ndash;&gt;-->
-<!--            <id>sonatype_snapshots</id>-->
-<!--            <name>Nexus Snapshot Repository</name>-->
-<!--            &lt;!&ndash; 这里就是在创建issue成功后，对方回复的snapshot发布地址&ndash;&gt;-->
-<!--            <url>https://oss.sonatype.org/content/repositories/snapshots</url>-->
-<!--        </snapshotRepository>-->
-<!--    </distributionManagement>-->
-    <repositories>
-        <!--自有私服-->
-        <repository>
-            <id>ciic-group</id>
-            <name>ciic-group</name>
-            <url>http://47.92.110.236:8666/repository/ciic-group/</url>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
-            </snapshots>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-        </repository>
-    </repositories>
+
     <profiles>
         <profile>
             <id>release</id>
@@ -157,54 +131,54 @@
             </activation>
             <build>
                 <plugins>
-<!--                    &lt;!&ndash; 要生成Javadoc和Source jar文件，您必须配置javadoc和源Maven插件 &ndash;&gt;-->
-<!--                    <plugin>-->
-<!--                        <groupId>org.apache.maven.plugins</groupId>-->
-<!--                        <artifactId>maven-javadoc-plugin</artifactId>-->
-<!--                        <version>3.2.0</version>-->
-<!--                        <configuration>-->
-<!--                            <aggregate>true</aggregate>-->
-<!--                        </configuration>-->
-<!--                        <executions>-->
-<!--                            <execution>-->
-<!--                                <id>attach-javadocs</id>-->
-<!--                                <goals>-->
-<!--                                    <goal>jar</goal>-->
-<!--                                </goals>-->
-<!--                            </execution>-->
-<!--                        </executions>-->
-<!--                    </plugin>-->
-<!--                    &lt;!&ndash; 生成sources源码包的插件 &ndash;&gt;-->
-<!--                    <plugin>-->
-<!--                        <artifactId>maven-source-plugin</artifactId>-->
-<!--                        <version>3.2.1</version>-->
-<!--                        <configuration>-->
-<!--                            <attach>true</attach>-->
-<!--                        </configuration>-->
-<!--                        <executions>-->
-<!--                            <execution>-->
-<!--                                <phase>package</phase>-->
-<!--                                <goals>-->
-<!--                                    <goal>jar-no-fork</goal>-->
-<!--                                </goals>-->
-<!--                            </execution>-->
-<!--                        </executions>-->
-<!--                    </plugin>-->
-<!--                    &lt;!&ndash;  必须配置GPG插件用于使用以下配置对组件进行签名 &ndash;&gt;-->
-<!--                    <plugin>-->
-<!--                        <groupId>org.apache.maven.plugins</groupId>-->
-<!--                        <artifactId>maven-gpg-plugin</artifactId>-->
-<!--                        <version>1.6</version>-->
-<!--                        <executions>-->
-<!--                            <execution>-->
-<!--                                <id>sign-artifacts</id>-->
-<!--                                <phase>verify</phase>-->
-<!--                                <goals>-->
-<!--                                    <goal>sign</goal>-->
-<!--                                </goals>-->
-<!--                            </execution>-->
-<!--                        </executions>-->
-<!--                    </plugin>-->
+                    <!-- 要生成Javadoc和Source jar文件，您必须配置javadoc和源Maven插件 -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.2.0</version>
+                        <configuration>
+                            <aggregate>true</aggregate>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- 生成sources源码包的插件 -->
+                    <plugin>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.2.1</version>
+                        <configuration>
+                            <attach>true</attach>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!--  必须配置GPG插件用于使用以下配置对组件进行签名 -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
