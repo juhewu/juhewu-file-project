@@ -16,6 +16,7 @@
     <modules>
         <module>juhewu-file-core</module>
         <module>juhewu-file-spring-boot</module>
+        <module>minio-multipart-upload</module>
     </modules>
 
     <properties>

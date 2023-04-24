@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+<form>
+    <input id="file-input" type="file">
+</form>
+<button onclick="submit()">提交</button>
+
+<script>
+    function submit() {
+        console.log("开始计时")
+        let start = new Date().getTime()
+        //1.拿取文件
+        let fileInput = document.getElementById("file-input");
+
+        //2.拿到文件大小字节数 和 文件名
+        let fileSize = fileInput.files[0].size;
+        let fileName = fileInput.files[0].name;
+        console.log(`fileSize: ${fileSize}`)
+        console.log(`fileName: ${fileName}`)
+
+        //3.请求接口 拿到url信息
+        let promise = getUrls(fileName, fileSize);
+
+        promise.then(function (response) {
+            //url 和 uploadId
+            let uploadId = response.data.uploadId;
+            let urls = response.data.urls;
+            let chunkSize = response.data.chunkSize;
+
+            console.log(`uploadId: ${uploadId}`)
+            console.log(`urls len ${urls.length}`)
+
+            //4.拆分文件
+            let fileArray = splitFile(fileInput.files[0], urls.length, chunkSize, fileSize);
+
+            //5.并行上传
+            let promises = urls.map((url, idx) => {
+                return axios.put(url, fileArray[idx])
+                    .then(res => {
+                        console.log(`res: ${res}`)
+                    }).catch(err => {
+                        console.log(`err: ${err}`)
+                    })
+            });
+
+            //6.如果需要合并
+            if (urls.length > 1) {
+                Promise.all(promises)
+                    .then(() => {
+                        agg(uploadId);
+                        console.log('用时 ', `${new Date().getTime() - start} ms`)
+
+                    })
+            } else {
+                console.log('用时 ', `${new Date().getTime() - start} ms`)
+            }
+
+
+        }).catch(function (error) {
+            console.log(error);
+        });
+    }
+
+    function agg(uploadId) {
+        return axios.get('http://127.0.0.1:8057/minio/agg', {
+            params: {
+                uploadId: uploadId,
+            }
+        });
+    }
+
+    function getUrls(fileName, fileSize) {
+        return axios.get('http://127.0.0.1:8057/minio/urls', {
+            params: {
+                fileName: fileName,
+                fileSize: fileSize
+            }
+        });
+    }
+
+    /**
+     *
+     * @param file
+     * @param fileNum 文件个数
+     * @param chunkSize 单个块的字节数
+     * @param fileSize 文件总字节数
+     * @returns {*[]}
+     */
+    function splitFile(file, fileNum, chunkSize, fileSize) {
+        let fileArray = []
+        let start = 0;
+
+        for (let i = 1; i <= fileNum - 1; i++) {
+            let subFile = file.slice(start, start + chunkSize)
+            fileArray.push(subFile);
+            start += chunkSize;
+        }
+        fileArray.push(file.slice(start, fileSize));
+        return fileArray
+    }
+</script>
+
+</body>
+</html>
