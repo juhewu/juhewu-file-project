@@ -25,12 +25,6 @@
             <artifactId>juhewu-file-spring-boot-starter</artifactId>
             <version>${revision}</version>
         </dependency>
-        <!-- AWS S3 -->
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.11.1034</version>
-        </dependency>
     </dependencies>
 
 </project>

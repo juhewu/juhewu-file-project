@@ -1,31 +1,39 @@
 package org.juhewu.file.core.storage;
 
 import cn.hutool.core.util.StrUtil;
-
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
-
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.juhewu.file.core.FileInfo;
+import org.juhewu.file.core.UploadPretreatment;
+import org.juhewu.file.core.exception.FileStorageException;
+import org.juhewu.file.core.storage.config.BaseConfig;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.sts.StsClient;
+import software.amazon.awssdk.services.sts.model.AssumeRoleRequest;
+import software.amazon.awssdk.services.sts.model.AssumeRoleResponse;
+import software.amazon.awssdk.services.sts.model.Credentials;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.Locale;
 import java.util.function.Consumer;
-
-import org.juhewu.file.core.FileInfo;
-import org.juhewu.file.core.UploadPretreatment;
-import org.juhewu.file.core.exception.FileStorageException;
-import org.juhewu.file.core.storage.config.BaseConfig;
 
 /**
  * AWS S3 存储
@@ -37,7 +45,7 @@ import org.juhewu.file.core.storage.config.BaseConfig;
 public class AwsS3FileStorage implements FileStorage {
 
     private final AwsS3 awsS3Config;
-    private AmazonS3 oss;
+    private S3Client oss;
     private final String bucketName;
     private final String basePath;
     private final String domain;
@@ -45,8 +53,8 @@ public class AwsS3FileStorage implements FileStorage {
     public AwsS3FileStorage(AwsS3 awsS3Config) {
         this.awsS3Config = awsS3Config;
         this.bucketName = awsS3Config.getBucketName();
-        this.basePath = StrUtil.addSuffixIfNot(awsS3Config.getBasePath(), File.separator);
-        this.domain = StrUtil.addSuffixIfNot(awsS3Config.getDomain(), File.separator);
+        this.basePath = StrUtil.addSuffixIfNot(awsS3Config.getBasePath(), StrUtil.EMPTY);
+        this.domain = StrUtil.addSuffixIfNot(awsS3Config.getDomain(), StrUtil.EMPTY);
 
         // 初始化 s3 客户端
         initAswS3Client();
@@ -63,15 +71,18 @@ public class AwsS3FileStorage implements FileStorage {
     private void initAswS3Client() {
         String region = awsS3Config.getRegion();
         String endpoint = awsS3Config.getEndpoint();
-        AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard()
-                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(awsS3Config.getAccessKey(), awsS3Config.getSecretKey())))
-                .withPathStyleAccessEnabled(awsS3Config.isPathStyleAccess());
-        if (StrUtil.isNotBlank(endpoint)) {
-            builder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpoint, region));
-        } else if (StrUtil.isNotBlank(region)) {
-            builder.withRegion(region);
-        }
-        this.oss = builder.build();
+
+        AwsCredentialsProviderChain providerChain = AwsCredentialsProviderChain
+                .builder()
+                .addCredentialsProvider(() -> AwsBasicCredentials.create(awsS3Config.getAccessKey(), awsS3Config.getSecretKey())).build();
+
+
+        this.oss = S3Client.builder()
+                .credentialsProvider(providerChain)
+                .region(Region.of(region))
+                .endpointOverride(URI.create(endpoint))
+                .forcePathStyle(true)
+                .build();
     }
 
     /**
@@ -79,9 +90,10 @@ public class AwsS3FileStorage implements FileStorage {
      */
     private void createBucket() {
         try {
-            if (!oss.doesBucketExistV2(bucketName)) {
-                oss.createBucket((bucketName));
-            }
+            CreateBucketRequest bucketRequest = CreateBucketRequest.builder()
+                    .bucket(bucketName)
+                    .build();
+            oss.createBucket(bucketRequest);
         } catch (Exception e) {
             log.debug("自动创建 bucket： {} 失败", bucketName, e);
         }
@@ -109,7 +121,7 @@ public class AwsS3FileStorage implements FileStorage {
             }
             return true;
         } catch (IOException e) {
-            oss.deleteObject(bucketName, newFileKey);
+            oss.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(newFileKey).build());
             throw new FileStorageException("文件上传失败！platform：" + getStorageId() + "，filename：" + fileInfo.getOriginalFilename(), e);
         }
     }
@@ -123,36 +135,50 @@ public class AwsS3FileStorage implements FileStorage {
      */
     @SneakyThrows
     private void putObject(String bucketName, String objectName, InputStream stream) {
-        ObjectMetadata objectMetadata = new ObjectMetadata();
-        objectMetadata.setContentLength(stream.available());
-        objectMetadata.setContentType("application/octet-stream");
+//        Map<String, String> metadata = new HashMap<>();
+//        metadata.put("author", "Mary Doe");
+//        metadata.put("version", "1.0.0.0");
+
         // 上传
-        oss.putObject(bucketName, objectName, stream, objectMetadata);
+        PutObjectRequest putOb = PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(objectName)
+//                .metadata(metadata)
+                .build();
+        oss.putObject(putOb, RequestBody.fromInputStream(stream, stream.available()));
     }
 
     @Override
     public boolean delete(FileInfo fileInfo) {
         if (fileInfo.getThFilename() != null) {   //删除缩略图
-            oss.deleteObject(bucketName, fileInfo.getBasePath() + fileInfo.getPath() + fileInfo.getThFilename());
+            oss.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(fileInfo.getBasePath() + fileInfo.getPath() + fileInfo.getThFilename()).build());
         }
-        oss.deleteObject(bucketName, fileInfo.getBasePath() + fileInfo.getPath() + fileInfo.getFilename());
+        oss.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(getFileKey(fileInfo)).build());
         return true;
     }
 
     @Override
     public boolean exists(FileInfo fileInfo) {
-        return oss.doesObjectExist(bucketName, fileInfo.getBasePath() + fileInfo.getPath() + fileInfo.getFilename());
+        return false;
+//        return oss.doesObjectExist(bucketName, fileInfo.getBasePath() + fileInfo.getPath() + fileInfo.getFilename());
     }
 
     @Override
     public void download(FileInfo fileInfo, Consumer<InputStream> consumer) {
-
-        S3Object object = oss.getObject(bucketName, fileInfo.getBasePath() + fileInfo.getPath() + fileInfo.getFilename());
-        try (InputStream in = object.getObjectContent()) {
+        GetObjectRequest objectRequest = GetObjectRequest
+                .builder()
+                .key(getFileKey(fileInfo))
+                .bucket(bucketName)
+                .build();
+        try (InputStream in = oss.getObject(objectRequest)) {
             consumer.accept(in);
         } catch (IOException e) {
             throw new FileStorageException("文件下载失败！platform：" + fileInfo, e);
         }
+    }
+
+    private String getFileKey(FileInfo fileInfo) {
+        return fileInfo.getBasePath() + fileInfo.getPath() + fileInfo.getFilename();
     }
 
     @Override
@@ -160,13 +186,54 @@ public class AwsS3FileStorage implements FileStorage {
         if (StrUtil.isBlank(fileInfo.getThFilename())) {
             throw new FileStorageException("缩略图文件下载失败，文件不存在！fileInfo：" + fileInfo);
         }
-        S3Object object = oss.getObject(bucketName, fileInfo.getBasePath() + fileInfo.getPath() + fileInfo.getThFilename());
-        try (InputStream in = object.getObjectContent()) {
+        GetObjectRequest objectRequest = GetObjectRequest
+                .builder()
+                .key(fileInfo.getBasePath() + fileInfo.getPath() + fileInfo.getThFilename())
+                .bucket(fileInfo.getStorageId())
+                .build();
+        try (InputStream in = oss.getObject(objectRequest)) {
             consumer.accept(in);
         } catch (IOException e) {
             throw new FileStorageException("缩略图文件下载失败！fileInfo：" + fileInfo, e);
         }
     }
+
+//    public void test() {
+//
+//        AssumeRoleRequest roleRequest = AssumeRoleRequest.builder()
+//                .roleArn("niceflow")
+//                .roleSessionName("test")
+//                .build();
+//
+//        AssumeRoleResponse roleResponse = stsClient.assumeRole(roleRequest);
+//        Credentials myCreds = roleResponse.credentials();
+//
+//        // Display the time when the temp creds expire.
+//        Instant exTime = myCreds.expiration();
+//        String tokenInfo = myCreds.sessionToken();
+//
+//        // Convert the Instant to readable date.
+//        DateTimeFormatter formatter =
+//                DateTimeFormatter.ofLocalizedDateTime( FormatStyle.SHORT )
+//                        .withLocale( Locale.US)
+//                        .withZone( ZoneId.systemDefault() );
+//
+//        formatter.format( exTime );
+//        System.out.println("The token "+tokenInfo + "  expires on " + exTime );
+//
+//        AwsCredentialsProviderChain providerChain = AwsCredentialsProviderChain
+//                .builder()
+//                .addCredentialsProvider(() -> AwsSessionCredentials.create(myCreds.accessKeyId(), myCreds.secretAccessKey(), myCreds.sessionToken())).build();
+//
+//
+//        this.oss = S3Client.builder()
+//                .credentialsProvider(providerChain)
+//                .region(Region.of(awsS3Config.getRegion()))
+//                .endpointOverride(URI.create(awsS3Config.getEndpoint()))
+//                .forcePathStyle(true)
+//                .build();
+//
+//    }
 
     /**
      * AWS S3

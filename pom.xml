@@ -20,19 +20,22 @@
 
     <properties>
         <!--项目版本号-->
-        <revision>1.0.1</revision>
+        <revision>1.0.2</revision>
         <!--设置编码-->
         <encoding>utf-8</encoding>
         <!--jdk 版本号-->
-        <java.version>1.8</java.version>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <java.version>18</java.version>
+        <maven.compiler.source>18</maven.compiler.source>
+        <maven.compiler.target>18</maven.compiler.target>
 
-        <lombok.version>1.18.22</lombok.version>
+        <lombok.version>1.18.26</lombok.version>
         <aws.version>1.11.543</aws.version>
 
         <juhewu-core-base.version>1.0.0</juhewu-core-base.version>
 
+        <aws.java.sdk.version>2.20.43</aws.java.sdk.version>
+
+        <spring-boot.version>3.0.3</spring-boot.version>
     </properties>
 
     <dependencies>
@@ -48,7 +51,7 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
-                <version>2.5.3</version>
+                <version>${spring-boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -59,7 +62,16 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>${aws.java.sdk.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
+
     </dependencyManagement>
 
     <organization>
@@ -109,79 +121,79 @@
     <distributionManagement>
         <repository>
             <!-- 这里的id必须要和全局配置中的release id 一致 -->
-            <id>sonatype_releases</id>
+            <id>nexus_releases</id>
             <name>Nexus Release Repository</name>
             <!-- 这里就是在创建issue成功后，对方回复的release发布地址-->
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+            <url>https://nexus.duanjw.com/repository/maven-releases/</url>
         </repository>
         <snapshotRepository>
             <!-- 这里的id必须要和全局配置中的snapshot id 一致 -->
-            <id>sonatype_snapshots</id>
+            <id>nexus_snapshots</id>
             <name>Nexus Snapshot Repository</name>
             <!-- 这里就是在创建issue成功后，对方回复的snapshot发布地址-->
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <url>https://nexus.duanjw.com/repository/maven-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 
     <profiles>
-        <profile>
-            <id>release</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <!-- 要生成Javadoc和Source jar文件，您必须配置javadoc和源Maven插件 -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.2.0</version>
-                        <configuration>
-                            <aggregate>true</aggregate>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <!-- 生成sources源码包的插件 -->
-                    <plugin>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <version>3.2.1</version>
-                        <configuration>
-                            <attach>true</attach>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar-no-fork</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <!--  必须配置GPG插件用于使用以下配置对组件进行签名 -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.6</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
+<!--        <profile>-->
+<!--            <id>release</id>-->
+<!--            <activation>-->
+<!--                <activeByDefault>true</activeByDefault>-->
+<!--            </activation>-->
+<!--            <build>-->
+<!--                <plugins>-->
+<!--                    &lt;!&ndash; 要生成Javadoc和Source jar文件，您必须配置javadoc和源Maven插件 &ndash;&gt;-->
+<!--                    <plugin>-->
+<!--                        <groupId>org.apache.maven.plugins</groupId>-->
+<!--                        <artifactId>maven-javadoc-plugin</artifactId>-->
+<!--                        <version>3.2.0</version>-->
+<!--                        <configuration>-->
+<!--                            <aggregate>true</aggregate>-->
+<!--                        </configuration>-->
+<!--                        <executions>-->
+<!--                            <execution>-->
+<!--                                <id>attach-javadocs</id>-->
+<!--                                <goals>-->
+<!--                                    <goal>jar</goal>-->
+<!--                                </goals>-->
+<!--                            </execution>-->
+<!--                        </executions>-->
+<!--                    </plugin>-->
+<!--                    &lt;!&ndash; 生成sources源码包的插件 &ndash;&gt;-->
+<!--                    <plugin>-->
+<!--                        <artifactId>maven-source-plugin</artifactId>-->
+<!--                        <version>3.2.1</version>-->
+<!--                        <configuration>-->
+<!--                            <attach>true</attach>-->
+<!--                        </configuration>-->
+<!--                        <executions>-->
+<!--                            <execution>-->
+<!--                                <phase>package</phase>-->
+<!--                                <goals>-->
+<!--                                    <goal>jar-no-fork</goal>-->
+<!--                                </goals>-->
+<!--                            </execution>-->
+<!--                        </executions>-->
+<!--                    </plugin>-->
+<!--                    &lt;!&ndash;  必须配置GPG插件用于使用以下配置对组件进行签名 &ndash;&gt;-->
+<!--                    <plugin>-->
+<!--                        <groupId>org.apache.maven.plugins</groupId>-->
+<!--                        <artifactId>maven-gpg-plugin</artifactId>-->
+<!--                        <version>1.6</version>-->
+<!--                        <executions>-->
+<!--                            <execution>-->
+<!--                                <id>sign-artifacts</id>-->
+<!--                                <phase>verify</phase>-->
+<!--                                <goals>-->
+<!--                                    <goal>sign</goal>-->
+<!--                                </goals>-->
+<!--                            </execution>-->
+<!--                        </executions>-->
+<!--                    </plugin>-->
+<!--                </plugins>-->
+<!--            </build>-->
+<!--        </profile>-->
     </profiles>
     <build>
         <plugins>

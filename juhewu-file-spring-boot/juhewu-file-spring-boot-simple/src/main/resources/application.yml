@@ -6,7 +6,7 @@ spring:
 juhewu:
   file-storage:
     # 默认的存储
-    default-storage-id: local-1
+    default-storage-id: aws-1
     # 本地存储
     local:
       - storageId: local-1
@@ -24,25 +24,26 @@ juhewu:
     # s3 协议的通用存储
     aws-s3:
       - storageId: aws-1
-        accessKey: minioadmin
-        secretKey: minioadmin
-        endPoint: http://localhost:9000
-        bucketName: 100
+        accessKey: niceflow
+        secretKey: niceflow
+        endpoint: http://s3-api.duanjw.com
+        region: cn-north-1
+        bucketName: niceflow
         # 根目录，默认是 /，如果设置，则文件会上传到该目录
-        basePath: test
+#        basePath: /
         pathStyleAccess: true
-      - storageId: aws-2
-        accessKey: minioadmin
-        secretKey: minioadmin
-        endPoint: http://localhost:9000
-        bucketName: 200
-        # 根目录，默认是 /
-        basePath: pic
-        domain: http://localhost:9000/200
-        # true path-style nginx 反向代理和S3默认支持 pathStyle {http://endpoint/bucketname} false
-        # supports virtual-hosted-style 阿里云等需要配置为 virtual-hosted-style
-        # 模式{http://bucketname.endpoint}
-        pathStyleAccess: true
+#      - storageId: aws-2
+#        accessKey: admin
+#        secretKey: 1qazXSW@
+#        endpoint: http://s3-api.duanjw.com
+#        bucketName: 200
+#        # 根目录，默认是 /
+#        basePath: pic
+#        domain: http://localhost:9000/200
+#        # true path-style nginx 反向代理和S3默认支持 pathStyle {http://endpoint/bucketname} false
+#        # supports virtual-hosted-style 阿里云等需要配置为 virtual-hosted-style
+#        # 模式{http://bucketname.endpoint}
+#        pathStyleAccess: true
     # fastdfs
     fastdfs:
       - storageId: fastdfs-1

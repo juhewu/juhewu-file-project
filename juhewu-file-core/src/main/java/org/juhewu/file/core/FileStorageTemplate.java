@@ -66,7 +66,7 @@ public class FileStorageTemplate {
         if (StrUtil.isNotBlank(uploadPretreatment.getSaveFilename())) {
             fileInfo.setFilename(uploadPretreatment.getSaveFilename());
         } else {
-            fileInfo.setFilename(IdUtil.objectId() + (StrUtil.isEmpty(fileInfo.getExt()) ? StrUtil.EMPTY : "." + fileInfo.getExt()));
+            fileInfo.setFilename(IdUtil.fastSimpleUUID() + (StrUtil.isEmpty(fileInfo.getExt()) ? StrUtil.EMPTY : "." + fileInfo.getExt()));
         }
 
         byte[] thumbnailBytes = uploadPretreatment.getThumbnailBytes();

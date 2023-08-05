@@ -1,7 +1,7 @@
 package org.juhewu.file.simple;
 
-import javax.servlet.ServletResponse;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.juhewu.file.config.FileStorageProperties;
 import org.juhewu.file.core.FileInfo;
 import org.juhewu.file.core.FileStorageTemplate;
@@ -69,7 +69,7 @@ public class FileController {
      */
     @PostMapping("download")
     @SneakyThrows
-    public void download(@RequestBody FileInfo fileInfo, ServletResponse response) {
+    public void download(@RequestBody FileInfo fileInfo, HttpServletResponse response) {
         template.download(fileInfo).outputStream(response.getOutputStream());
     }
 }
